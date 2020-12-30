@@ -13,6 +13,7 @@ import time
 import requests
 import six
 import tqdm
+import urllib
 
 from .parse_url import parse_url
 
@@ -62,6 +63,7 @@ def get_url_from_gdrive_confirmation(contents):
 def download(
     url, output=None, quiet=False, proxy=None, speed=None, use_cookies=True
 ):
+
     """Download file from URL.
 
     Parameters
@@ -153,8 +155,13 @@ def download(
             return
 
     if file_id and is_download_link:
-        m = re.search('filename="(.*)"', res.headers["Content-Disposition"])
-        filename_from_url = m.groups()[0]
+        m = re.search(r'filename\*=UTF-8\'\'(.*)', res.headers["Content-Disposition"])
+        if m:
+            filename_from_url = m.groups()[0].strip()
+            filename_from_url = urllib.parse.unquote(filename_from_url)
+        else:
+            m = re.search('filename="(.*)"', res.headers["Content-Disposition"])
+            filename_from_url = m.groups()[0]
     else:
         filename_from_url = osp.basename(url)
 
